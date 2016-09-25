@@ -1,9 +1,9 @@
-# Makefile for echo client and server
+#Makefile for echo client and server
 
 CXX=			g++ $(CCFLAGS)
 
-ECHO-SERVER=		echo-server.o server.o
-ECHO-CLIENT=		echo-client.o client.o
+ECHO-SERVER=		echo-server.o server.o message.o
+ECHO-CLIENT=		echo-client.o client.o message.o
 OBJS =			$(ECHO-SERVER) $(ECHO-CLIENT)
 
 LIBS=

@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "message.h"
 
 #include <fstream>
 #include <iostream>
