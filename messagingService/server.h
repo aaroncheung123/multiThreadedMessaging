@@ -14,6 +14,13 @@
 #include "message.h"
 #include <map>
 #include <vector>
+#include <thread>
+#include <pthread.h>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include "queue.h"
+#include "Map.h"
 
 using namespace std;
 
@@ -21,7 +28,7 @@ class Server {
 public:
     Server(int port);
     ~Server();
-
+    void create_first();
     void run();
     
 private:
@@ -34,11 +41,11 @@ private:
     bool send_response(int, string);
     Message parse_request(string);
     bool handle_message(int, Message&, string);
+    Queue myQueue;
+    Map myMap; 
 
     int port_;
     int server_;
     int buflen_;
     char* buf_;
-
-    map<string,vector<Message> > myMap;
 };

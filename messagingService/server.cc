@@ -44,7 +44,7 @@ Server::create() {
 
     // call bind to associate the socket with our local address and
     // port
-    if (bind(server_,(const struct sockaddr *)&server_addr,sizeof(server_addr)) < 0) {
+    if (::bind(server_,(const struct sockaddr *)&server_addr,sizeof(server_addr)) < 0) {
         perror("bind");
         exit(-1);
     }
@@ -61,16 +61,47 @@ Server::close_socket() {
     close(server_);
 }
 
-void
-Server::serve() {
+void Server::create_first() 
+{
+    while(1) 
+    {
+        handle(myQueue.remove());
+    }
+}
+
+void Server::serve() {
 
     // setup client
     int client;
     struct sockaddr_in client_addr;
     socklen_t clientlen = sizeof(client_addr);
       // accept clients
-    while ((client = accept(server_,(struct sockaddr *)&client_addr,&clientlen)) > 0) {
-        handle(client);
+
+    //creating 10 threads
+    // thread t1(&Server::create_first, this);
+    // thread t2(&Server::create_first, this);
+    // thread t3(&Server::create_first, this);
+    // thread t4(&Server::create_first, this);
+    // thread t5(&Server::create_first, this);
+    // thread t6(&Server::create_first, this);
+    // thread t7(&Server::create_first, this);
+    // thread t8(&Server::create_first, this);
+    // thread t9(&Server::create_first, this);
+    // thread t10(&Server::create_first, this);
+    vector<thread> threads;
+
+    for (int i=0; i < 10; i++) {
+        // create thread
+        threads.push_back(thread(&Server::create_first, this));
+    }
+    
+
+    while ((client = accept(server_,(struct sockaddr *)&client_addr,&clientlen)) > 0) 
+    {
+        //create a client object
+        //cout << "Adding to queue **********************" << endl;
+        myQueue.add(client);
+        //cout << "hello1" << endl;
     }
     close_socket();
 }
@@ -81,7 +112,7 @@ Server::handle(int client)
     // loop to handle all requests
     while (1) 
     {
-        cout << "TEST 0" << endl;
+        //cout << "TEST 0" << endl;
         // get a request
         string request = get_request(client);
         // break if client is done or an error occurred
@@ -90,8 +121,9 @@ Server::handle(int client)
             //break;
         // parse request
 
+
         //Checking the command
-        cout << "TEST 1" << endl;
+        //cout << "TEST 1" << endl;
         string command;
         string user;
         string subject;
@@ -105,7 +137,7 @@ Server::handle(int client)
         string delimiter = "\n";
         string firstCommand = request.substr(0, request.find(" "));
         string fullCommand = request.substr(0, request.find(delimiter));
-        cout << "TEST 2" << endl;
+        //cout << "TEST 2" << endl;
         Message message = Message();
         cout << endl << endl << "REQUEST ***************************" << endl << request << endl;
         //*********************** STORING MESSAGES
@@ -113,7 +145,7 @@ Server::handle(int client)
         {
             cache = request.substr(request.find(delimiter) + 1, request.length()-1);
             message.setCache(cache);
-            cout << "TEST 3" << endl;
+            //cout << "TEST 3" << endl;
 
 
             ss << fullCommand;
@@ -127,14 +159,15 @@ Server::handle(int client)
             cout << "length: " << length << endl;
 
 
-            cout << "TEST 4" << endl;
-
+            //cout << "TEST 4" << endl;
             if(subject.empty())
             {
                 cout << "ERROR ERROR ERROR1" << endl;
                 bool success = send_response(client, "error no subject\n");
             }
             else if(length == NULL)
+
+
             {
                 cout << "ERROR ERROR ERROR2" << endl;
                 bool success = send_response(client, "error command\n");
@@ -153,7 +186,7 @@ Server::handle(int client)
                 cout << "length: " << message.getLength() << endl;
                 if (message.getCache().size() < message.getLength())
                 {
-                    cout << "TEST 6" << endl;
+                    //cout << "TEST 6" << endl;
                     get_value(client,message);
                 }
                 //do something
@@ -163,14 +196,15 @@ Server::handle(int client)
                 // {
                 //     break;
                 // }
-                cout << "TEST 7" << endl;
-                map<string, vector<Message> > ::iterator it;
-                it = myMap.find(message.getUser());
+                //cout << "TEST 7" << endl;
+                //map<string, vector<Message> > ::iterator it;
+                //it = myMap.find(message.getUser());
 
-                if(it!= myMap.end())
+                if(myMap.contains(message.getUser()))
                 {
-                    cout << "TEST 8" << endl;
-                    it->second.push_back(message);
+                    //cout << "TEST 8" << endl;
+                    //it->second.push_back(message);
+                    myMap.push(message);
                     bool success = send_response(client, "OK\n");
                     if (!success)
                     {
@@ -179,21 +213,21 @@ Server::handle(int client)
                 }
                 else
                 {
-                    cout << "TEST 9" << endl;
+                    //cout << "TEST 9" << endl;
                     vector<Message> v;
                     v.push_back(message);
-                    cout << "TEST 9.1" << endl;
+                    //cout << "TEST 9.1" << endl;
                     myMap.insert(pair<string,vector<Message> >(message.getUser(), v));
-                    cout << "TEST 9.2" << endl;
+                    //cout << "TEST 9.2" << endl;
                     bool success = send_response(client, "OK\n");
                     if (!success)
                     {
-                        cout << "TEST 9.3" << endl;
+                        //cout << "TEST 9.3" << endl;
                         break;
                     }
-                    cout << "TEST 9.4" << endl;
+                    //cout << "TEST 9.4" << endl;
                 }
-                cout << "TEST 10" << endl;
+                //cout << "TEST 10" << endl;
             } 
         }
         else if(firstCommand == "list")
@@ -201,9 +235,9 @@ Server::handle(int client)
             ss << fullCommand;
             ss >> command >> user;
 
-            cout << "LIST -------" << endl;
-            cout << "command: " << command << endl;
-            cout << "user: " << user << endl;
+            // cout << "LIST -------" << endl;
+            // cout << "command: " << command << endl;
+            // cout << "user: " << user << endl;
 
 
             if(user.empty())
@@ -220,70 +254,41 @@ Server::handle(int client)
             message.setUser(user);
 
 
-            map<string, vector<Message> > ::iterator it;
-            it = myMap.find(message.getUser());
-            vector<Message> myVect = it->second;
-    
-
-            string totalString = "list " + to_string(myVect.size()) + "\n";
-
-            for(int i = 0; i < myVect.size(); i++)
-            {
-                totalString += to_string(i + 1) + " " + myVect[i].getSubject() + "\n";
-            }
-
-            cout << "TOTAL STRING FOR LIST IS" << endl << totalString << endl;
-            bool success = send_response(client, totalString);
+            bool success = send_response(client, myMap.list(message));
             if (!success)
             {
-                cout << "ERROR ERROR 2" << endl;
+                //cout << "ERROR ERROR 2" << endl;
                 send_response(client, "error");
             }
+            
         }
         else if(firstCommand == "get")
         {
-            cout << "GETTER" << endl;
+            //cout << "GETTER" << endl;
             ss << request;
             ss >> command >> user >> index;
 
             message.setCommand(command);
             message.setUser(user);
             message.setIndex(atoi(index.c_str()));
-            cout << "GETTER1" << endl;
-            map<string, vector<Message> > ::iterator it;
-            it = myMap.find(message.getUser());
-            vector<Message> myVect;
-        
-            if(it != myMap.end())
+            //cout << "GETTER1" << endl;
+            
+
+            if(myMap.get(message) == "error invalid get\n")
             {
-                 cout << "GETTER2" << endl;
-                 myVect = it->second;
-
-                 Message letter = myVect[message.getIndex() - 1];
-                 string sub = letter.getSubject();
-                 string words = letter.getCache();
-                 string wordLength = to_string(letter.getLength());
-                 cout << "GETTER4" << endl;
-                 // cout << "sub: " << sub << endl;
-                 // cout << "length: " << wordLength << endl;
-                 // cout << "words: " << words << endl;
-
-                 string totalString = "message " + sub + " " + wordLength + "\n" + words;
-
-                 //cout << "TOTAL STRING IS:" << totalString;
-                 bool success = send_response(client, totalString);
-                 cout << "TOTAL STRING IS ()()()()()" << totalString << endl;
-                 if (!success)
-                 {
-                     cout << "ERROR ERROR 1" << endl;
-                     send_response(client, "error invalid input\n");
-                 }
+                send_response(client, "error invalid get\n");
             }
             else
             {
-                cout << "GETTER3" << endl;
-                send_response(client, "error invalid get\n");
+                bool success = send_response(client, myMap.get(message));
+                if (!success)
+                {
+                    //cout << "ERROR ERROR 1" << endl;
+                    send_response(client, "error invalid input\n");
+                }
             }
+
+
         }
         else if(firstCommand == "reset\n")
         {

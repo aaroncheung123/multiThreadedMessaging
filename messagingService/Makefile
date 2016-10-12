@@ -2,13 +2,13 @@
 
 CXX=			g++ $(CCFLAGS)
 
-ECHO-SERVER=		echo-server.o server.o message.o
+ECHO-SERVER=		echo-server.o server.o message.o queue.o Map.o
 ECHO-CLIENT=		echo-client.o client.o message.o
 OBJS =			$(ECHO-SERVER) $(ECHO-CLIENT)
 
-LIBS=
+LIBS= -pthread -std=c++11 
 
-CCFLAGS= -g
+CCFLAGS= -std=c++11 -g
 
 all:	echo-server echo-client
 
@@ -27,8 +27,8 @@ realclean:
 
 # These lines ensure that dependencies are handled automatically.
 %.d:	%.cc
-	$(SHELL) -ec '$(CC) -M $(CPPFLAGS) $< \
+	$(SHELL) -ec '$(CC) -M $(CCFLAGS) $< \
 		| sed '\''s/\($*\)\.o[ :]*/\1.o $@ : /g'\'' > $@; \
 		[ -s $@ ] || rm -f $@'
 
-include	$(OBJS:.o=.d)
+-include	$(OBJS:.o=.d)
