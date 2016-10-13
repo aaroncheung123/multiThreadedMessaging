@@ -35,7 +35,7 @@ private:
     void create();
     void close_socket();
     void serve();
-    void handle(int);
+    bool handle(int);
     string get_request(int);
     void get_value(int, Message&);
     bool send_response(int, string);
@@ -47,5 +47,5 @@ private:
     int port_;
     int server_;
     int buflen_;
-    char* buf_;
+    //char* buf_;
 };

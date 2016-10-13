@@ -31,7 +31,7 @@ int Queue::remove()
 {
 	//static condition_variable notempty;
 	unique_lock<mutex> lock(m);
-	cout << "HANNDDDDLLEEE -------------------****" << endl;
+	//cout << "HANNDDDDLLEEE -------------------****" << endl;
 	//cout << "r1" << endl;
 	while(myQueue.empty())
 	{

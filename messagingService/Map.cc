@@ -6,33 +6,33 @@ Map::~Map(){}
 
 mutex Map::m;
 
-map<string, vector<Message> > ::iterator Map::find(string s)
-{
-	map<string, vector<Message> > ::iterator it;
-	unique_lock<mutex> lock(m);
-	it = myMap.find(s);
-	return it;
-}
-void Map::insert(pair<string,vector<Message> > w)
-{
-	unique_lock<mutex> lock(m);
-	myMap.insert(w);
-}
-bool Map::contains(string s)
-{
-	unique_lock<mutex> lock(m);
-	map<string, vector<Message> > ::iterator it;
-    it = myMap.find(s);
+// map<string, vector<Message> > ::iterator Map::find(string s)
+// {
+// 	map<string, vector<Message> > ::iterator it;
+// 	unique_lock<mutex> lock(m);
+// 	it = myMap.find(s);
+// 	return it;
+// }
+// void Map::insert(pair<string,vector<Message> > w)
+// {
+// 	unique_lock<mutex> lock(m);
+// 	myMap.insert(w);
+// }
+// bool Map::contains(string s)
+// {
+// 	unique_lock<mutex> lock(m);
+// 	map<string, vector<Message> > ::iterator it;
+//     it = myMap.find(s);
 
-    if(it != myMap.end())
-    {
-    	return true;
-    }
-    else
-    {
-    	return false;
-    }
-}
+//     if(it != myMap.end())
+//     {
+//     	return true;
+//     }
+//     else
+//     {
+//     	return false;
+//     }
+// }
 
 void Map::clear()
 {
@@ -47,6 +47,35 @@ void Map::push(Message x)
     it = myMap.find(x.getUser());
     it->second.push_back(x);
 }
+
+string Map::put(Message message)
+{
+	unique_lock<mutex> lock(m);
+	map<string, vector<Message> > ::iterator it;
+	it = myMap.find(message.getUser());
+
+	if(it != myMap.end())
+	{
+	    //cout << "TEST 8" << endl;
+	    it->second.push_back(message);
+	    //myMap.push(message);
+	    return "OK\n";
+	}
+	else
+	{
+	    //cout << "TEST 9" << endl;
+	    vector<Message> v;
+	    v.push_back(message);
+	    //cout << "TEST 9.1" << endl;
+	    myMap.insert(pair<string,vector<Message> >(message.getUser(), v));
+	    return "OK\n";
+	    //cout << "TEST 9.2" << endl;
+	    
+	   
+	    //cout << "TEST 9.4" << endl;
+	}
+}
+
 string Map::get(Message message)
 {
 	unique_lock<mutex> lock(m);

@@ -23,6 +23,7 @@ public:
 	void push(Message);
 	string get(Message);
 	string list(Message);
+	string put(Message message);
 
 private:
 	static mutex m;

@@ -4,7 +4,7 @@ Server::Server(int port) {
     // setup variables
     port_ = port;
     buflen_ = 1024;
-    buf_ = new char[buflen_+1];
+    //buf_ = new char[buflen_+1];
 }
 
 Server::~Server() {
@@ -65,7 +65,12 @@ void Server::create_first()
 {
     while(1) 
     {
-        handle(myQueue.remove());
+        int temp = myQueue.remove();
+        if(handle(temp))
+        {
+            myQueue.add(temp);
+        }
+        
     }
 }
 
@@ -78,25 +83,25 @@ void Server::serve() {
       // accept clients
 
     //creating 10 threads
-    // thread t1(&Server::create_first, this);
-    // thread t2(&Server::create_first, this);
-    // thread t3(&Server::create_first, this);
-    // thread t4(&Server::create_first, this);
-    // thread t5(&Server::create_first, this);
-    // thread t6(&Server::create_first, this);
-    // thread t7(&Server::create_first, this);
-    // thread t8(&Server::create_first, this);
-    // thread t9(&Server::create_first, this);
-    // thread t10(&Server::create_first, this);
+    thread t1(&Server::create_first, this);
+    thread t2(&Server::create_first, this);
+    thread t3(&Server::create_first, this);
+    thread t4(&Server::create_first, this);
+    thread t5(&Server::create_first, this);
+    thread t6(&Server::create_first, this);
+    thread t7(&Server::create_first, this);
+    thread t8(&Server::create_first, this);
+    thread t9(&Server::create_first, this);
+    thread t10(&Server::create_first, this);
     vector<thread> threads;
 
-    for (int i=0; i < 10; i++) {
-        // create thread
-        threads.push_back(thread(&Server::create_first, this));
-    }
+    // for (int i=0; i < 10; i++) {
+    //     // create thread
+    //     threads.push_back(thread(&Server::create_first, this));
+    // }
     
 
-    while ((client = accept(server_,(struct sockaddr *)&client_addr,&clientlen)) > 0) 
+    while((client = accept(server_,(struct sockaddr *)&client_addr,&clientlen)) > 0) 
     {
         //create a client object
         //cout << "Adding to queue **********************" << endl;
@@ -106,7 +111,7 @@ void Server::serve() {
     close_socket();
 }
 
-void
+bool
 Server::handle(int client) 
 {
     // loop to handle all requests
@@ -117,7 +122,9 @@ Server::handle(int client)
         string request = get_request(client);
         // break if client is done or an error occurred
         if (request.empty())
-          break;
+        {
+            return false;
+        }
             //break;
         // parse request
 
@@ -182,53 +189,25 @@ Server::handle(int client)
                 //if message is too long then get the rest of the message
                 
                 
-                cout << "CACHE ------ " << message.getCache().size() << endl;
-                cout << "length: " << message.getLength() << endl;
+                //cout << "CACHE ------ " << message.getCache().size() << endl;
+                //cout << "length: " << message.getLength() << endl;
                 if (message.getCache().size() < message.getLength())
                 {
                     //cout << "TEST 6" << endl;
                     get_value(client,message);
                 }
-                //do something
-                // bool success = handle_message(client,message, message.getCommand());
-                // // break if an error occurred
-                // if (not success)
-                // {
-                //     break;
-                // }
-                //cout << "TEST 7" << endl;
-                //map<string, vector<Message> > ::iterator it;
-                //it = myMap.find(message.getUser());
 
-                if(myMap.contains(message.getUser()))
+                
+                if(myMap.put(message) == "OK\n")
                 {
-                    //cout << "TEST 8" << endl;
-                    //it->second.push_back(message);
-                    myMap.push(message);
                     bool success = send_response(client, "OK\n");
                     if (!success)
                     {
+                        cout << "ERROR ERROR ERROR4" << endl;
                         break;
                     }
                 }
-                else
-                {
-                    //cout << "TEST 9" << endl;
-                    vector<Message> v;
-                    v.push_back(message);
-                    //cout << "TEST 9.1" << endl;
-                    myMap.insert(pair<string,vector<Message> >(message.getUser(), v));
-                    //cout << "TEST 9.2" << endl;
-                    bool success = send_response(client, "OK\n");
-                    if (!success)
-                    {
-                        //cout << "TEST 9.3" << endl;
-                        break;
-                    }
-                    //cout << "TEST 9.4" << endl;
-                }
-                //cout << "TEST 10" << endl;
-            } 
+            }
         }
         else if(firstCommand == "list")
         {
@@ -296,6 +275,7 @@ Server::handle(int client)
             bool success = send_response(client, "OK\n");
             if (!success)
             {
+                cout << "ERROR ERROR ERROR5" << endl;
                 send_response(client, "error invalid input\n");
             }
         }
@@ -315,6 +295,7 @@ Server::handle(int client)
 
     }
     close(client);
+    return true;
 }
 
 //**************************************************
@@ -322,6 +303,7 @@ Server::handle(int client)
 void
 Server::get_value(int client, Message& message) 
 {
+    char* buf_ = new char[buflen_+1];
     //cout << "MAYDAY1 !!!!!!!!!!!!!!!!!!!!!" << endl;
     string temp = "";
     while(message.getCache().size() < message.getLength())
@@ -411,6 +393,7 @@ Server::send_response(int client, string response) {
 string
 Server::get_request(int client) {
     string request = "";
+    char* buf_ = new char[buflen_+1];
     // read until we get a newline
     while (request.find("\n") == string::npos) {
         int nread = recv(client,buf_,1024,0);
@@ -422,6 +405,7 @@ Server::get_request(int client) {
                 // an error occurred, so break out
                 return "";
         } else if (nread == 0) {
+
             // the socket is closed
             return "";
         }
